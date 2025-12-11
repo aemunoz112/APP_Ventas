@@ -17,7 +17,23 @@ class AuthRepository(private val userPreferences: UserPreferences) {
      */
     suspend fun login(email: String, password: String): Result<Boolean> {
         return try {
+            android.util.Log.d("AuthRepository", "=== INICIO LOGIN ===")
+            android.util.Log.d("AuthRepository", "Email: $email")
+            android.util.Log.d("AuthRepository", "URL base: https://nonceremonially-unwary-livia.ngrok-free.app/")
+            android.util.Log.d("AuthRepository", "Endpoint: auth/login")
+            android.util.Log.d("AuthRepository", "URL completa esperada: https://nonceremonially-unwary-livia.ngrok-free.app/auth/login")
+            
             val response = api.login(LoginRequest(email, password))
+            
+            android.util.Log.d("AuthRepository", "=== RESPUESTA ===")
+            android.util.Log.d("AuthRepository", "Código HTTP: ${response.code()}")
+            android.util.Log.d("AuthRepository", "Exitoso: ${response.isSuccessful}")
+            android.util.Log.d("AuthRepository", "Headers: ${response.headers()}")
+            
+            if (!response.isSuccessful) {
+                val errorBody = response.errorBody()?.string()
+                android.util.Log.e("AuthRepository", "Error body: $errorBody")
+            }
             
             if (response.isSuccessful && response.body() != null) {
                 val loginResponse = response.body()!!
@@ -123,11 +139,43 @@ class AuthRepository(private val userPreferences: UserPreferences) {
                     Result.failure(Exception("Datos de usuario incompletos"))
                 }
             } else {
-                val errorMessage = when (response.code()) {
-                    401 -> "Email o contraseña incorrectos"
-                    404 -> "Usuario no encontrado"
-                    500 -> "Error en el servidor"
-                    else -> "Error al iniciar sesión: ${response.code()}"
+                val errorBody = try {
+                    response.errorBody()?.string() ?: ""
+                } catch (e: Exception) {
+                    "No se pudo leer el cuerpo del error: ${e.message}"
+                }
+                
+                android.util.Log.e("AuthRepository", "=== ERROR EN LOGIN ===")
+                android.util.Log.e("AuthRepository", "Código HTTP: ${response.code()}")
+                android.util.Log.e("AuthRepository", "Mensaje: ${response.message()}")
+                android.util.Log.e("AuthRepository", "Error Body (primeros 500 chars): ${errorBody.take(500)}")
+                
+                // Verificar si es una respuesta HTML (página de ngrok)
+                val isHtmlResponse = errorBody.contains("<html", ignoreCase = true) || 
+                                   errorBody.contains("<!DOCTYPE", ignoreCase = true) ||
+                                   response.headers()["content-type"]?.contains("text/html") == true
+                
+                val errorMessage = when {
+                    isHtmlResponse -> {
+                        android.util.Log.e("AuthRepository", "La respuesta es HTML - probablemente página de ngrok")
+                        "Error de conexión: El servidor devolvió HTML en lugar de JSON.\n" +
+                        "Verifica:\n" +
+                        "1. Que ngrok esté corriendo\n" +
+                        "2. Que el backend FastAPI esté activo\n" +
+                        "3. Que la URL sea correcta: https://nonceremonially-unwary-livia.ngrok-free.app/auth/login"
+                    }
+                    response.code() == 401 -> "Email o contraseña incorrectos"
+                    response.code() == 404 -> {
+                        if (errorBody.contains("Not Found") || errorBody.contains("404")) {
+                            "Usuario no encontrado o endpoint incorrecto.\n" +
+                            "URL esperada: https://nonceremonially-unwary-livia.ngrok-free.app/auth/login\n" +
+                            "Verifica que el backend esté corriendo."
+                        } else {
+                            "Usuario no encontrado"
+                        }
+                    }
+                    response.code() == 500 -> "Error en el servidor: $errorBody"
+                    else -> "Error al iniciar sesión (Código: ${response.code()})\n$errorBody"
                 }
                 Result.failure(Exception(errorMessage))
             }

@@ -12,15 +12,8 @@ import java.util.concurrent.TimeUnit
  */
 object RetrofitClient {
     
-    // IMPORTANTE: Cambia esta URL por la IP de tu computadora
-    // Para emulador Android: usa 10.0.2.2
-    // Para dispositivo físico: usa la IP de tu PC en la red local (ej: 192.168.1.100)
-    
-    // ⚠️ ESTÁS USANDO DISPOSITIVO FÍSICO - Cambia por tu IP:
-    private const val BASE_URL = "http://192.168.1.88:8000/"  // Ejemplo: "http://192.168.1.100:8000/"
-    
-    // Para emulador, usa esta:
-    // private const val BASE_URL = "http://10.0.2.2:8000/"
+    // URL base de la API usando ngrok
+    private const val BASE_URL = "https://nonceremonially-unwary-livia.ngrok-free.app/"
     
     // Token de autenticación (se configurará después del login)
     private var authToken: String? = null
@@ -36,7 +29,14 @@ object RetrofitClient {
      * Interceptor para agregar token en las peticiones
      */
     private val authInterceptor = okhttp3.Interceptor { chain ->
-        val requestBuilder = chain.request().newBuilder()
+        val originalRequest = chain.request()
+        val requestBuilder = originalRequest.newBuilder()
+        
+        // Log de la URL que se está llamando
+        android.util.Log.d("RetrofitClient", "=== REQUEST ===")
+        android.util.Log.d("RetrofitClient", "URL: ${originalRequest.url}")
+        android.util.Log.d("RetrofitClient", "Method: ${originalRequest.method}")
+        android.util.Log.d("RetrofitClient", "Headers: ${originalRequest.headers}")
         
         // Agregar token si existe
         authToken?.let {
@@ -47,7 +47,19 @@ object RetrofitClient {
         requestBuilder.addHeader("Content-Type", "application/json")
         requestBuilder.addHeader("Accept", "application/json")
         
-        chain.proceed(requestBuilder.build())
+        // Header necesario para ngrok free (evita la página de advertencia)
+        requestBuilder.addHeader("ngrok-skip-browser-warning", "true")
+        
+        val newRequest = requestBuilder.build()
+        val response = chain.proceed(newRequest)
+        
+        // Log de la respuesta
+        android.util.Log.d("RetrofitClient", "=== RESPONSE ===")
+        android.util.Log.d("RetrofitClient", "Code: ${response.code}")
+        android.util.Log.d("RetrofitClient", "Message: ${response.message}")
+        android.util.Log.d("RetrofitClient", "Headers: ${response.headers}")
+        
+        response
     }
     
     /**

@@ -32,5 +32,21 @@ object Formatters {
     fun formatCurrency(value: Long): String {
         return currencyFormatter.format(value)
     }
+    
+    /**
+     * Formatea una cantidad numérica con separadores de miles
+     */
+    fun formatQuantity(value: Double): String {
+        val formatter = NumberFormat.getNumberInstance(Locale("es", "CO"))
+        return formatter.format(value)
+    }
+    
+    /**
+     * Formatea una cantidad numérica con separadores de miles
+     */
+    fun formatQuantity(value: Int): String {
+        val formatter = NumberFormat.getNumberInstance(Locale("es", "CO"))
+        return formatter.format(value)
+    }
 }
 
