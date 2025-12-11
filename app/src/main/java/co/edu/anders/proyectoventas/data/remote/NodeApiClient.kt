@@ -12,12 +12,8 @@ import java.util.concurrent.TimeUnit
  */
 object NodeApiClient {
     
-    // URL de la API de Node.js
-    // Para dispositivo físico: usa la IP de tu PC (misma que el backend Python)
-    private const val NODE_API_BASE_URL = "http://192.168.1.88:3000/"
-    
-    // Para emulador, usa esta:
-    // private const val NODE_API_BASE_URL = "http://10.0.2.2:3000/"
+    // URL de la API de Node.js usando Dev Tunnels
+    private const val NODE_API_BASE_URL = "https://3sm4zxjz-8001.use.devtunnels.ms/"
     
     /**
      * Interceptor para logging (solo en desarrollo)
