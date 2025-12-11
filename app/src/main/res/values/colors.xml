@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Colores Primarios - Azul (Color esencial de la app) -->
+    <color name="primary_blue">#2196F3</color>
+    <color name="primary_blue_light">#64B5F6</color>
+    <color name="primary_blue_dark">#1976D2</color>
+    
+    <!-- Colores Secundarios -->
+    <color name="secondary_blue">#03A9F4</color>
+    <color name="secondary_blue_light">#4FC3F7</color>
+    <color name="secondary_blue_dark">#0288D1</color>
+    
+    <!-- Colores de Estado -->
+    <color name="success">#27AE60</color>
+    <color name="error">#E74C3C</color>
+    <color name="warning">#F39C12</color>
+    <color name="info">#3498DB</color>
+    
+    <!-- Colores de Fondo -->
+    <color name="background_light">#FFFFFF</color>
+    <color name="surface_light">#FFFFFF</color>
+    
+    <!-- Colores de Texto -->
+    <color name="text_primary_light">#212121</color>
+    <color name="text_secondary_light">#757575</color>
+    
+    <!-- Colores básicos -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    
+    <!-- Colores legacy (para compatibilidad) -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+</resources>
