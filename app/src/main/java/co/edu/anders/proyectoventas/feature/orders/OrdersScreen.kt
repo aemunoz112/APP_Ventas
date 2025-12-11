@@ -70,7 +70,7 @@ fun OrdersScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val viewModel = remember { OrdersViewModel() }
+    val viewModel = remember { OrdersViewModel(context) }
     val uiState by viewModel.uiState.collectAsState()
 
     var selectedBottomItem by remember { mutableIntStateOf(3) }
@@ -299,41 +299,58 @@ fun OrdersScreen(
                                                     }
                                                 }
 
-                                                if (pedido.direccion != null || pedido.ciudadNombre != null || pedido.departamentoNombre != null) {
-                                                    Row(
-                                                        modifier = Modifier.fillMaxWidth(),
-                                                        horizontalArrangement = Arrangement.SpaceBetween
-                                                    ) {
-                                                        Column(modifier = Modifier.weight(1f)) {
-                                                            Text(
-                                                                text = "Ubicación",
-                                                                fontSize = 12.sp,
-                                                                color = TextSecondaryLight,
-                                                                fontWeight = FontWeight.Medium
-                                                            )
-                                                            VerticalSpacer(4.dp)
-                                                            Text(
-                                                                text = buildString {
-                                                                    val ciudad = pedido.ciudadNombre
-                                                                    val departamento = pedido.departamentoNombre
-                                                                    
-                                                                    if (ciudad != null) {
-                                                                        append(ciudad)
+                                                // Mostrar ubicación siempre (departamento, ciudad)
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween
+                                                ) {
+                                                    Column(modifier = Modifier.weight(1f)) {
+                                                        Text(
+                                                            text = "Ubicación",
+                                                            fontSize = 12.sp,
+                                                            color = TextSecondaryLight,
+                                                            fontWeight = FontWeight.Medium
+                                                        )
+                                                        VerticalSpacer(4.dp)
+                                                        Text(
+                                                            text = buildString {
+                                                                val partes = mutableListOf<String>()
+                                                                
+                                                                // Mostrar departamento primero
+                                                                if (!pedido.departamentoNombre.isNullOrEmpty() && pedido.departamentoNombre != "N/A") {
+                                                                    partes.add(pedido.departamentoNombre!!)
+                                                                }
+                                                                
+                                                                // Luego ciudad
+                                                                if (!pedido.ciudadNombre.isNullOrEmpty() && pedido.ciudadNombre != "N/A") {
+                                                                    partes.add(pedido.ciudadNombre!!)
+                                                                }
+                                                                
+                                                                if (partes.isNotEmpty()) {
+                                                                    append(partes.joinToString(", "))
+                                                                } else {
+                                                                    // Si no hay nombres pero hay IDs, mostrar IDs como fallback
+                                                                    val idsPartes = mutableListOf<String>()
+                                                                    if (pedido.departamentoId != null) {
+                                                                        idsPartes.add("Dept ID: ${pedido.departamentoId}")
                                                                     }
-                                                                    if (departamento != null) {
-                                                                        if (isNotEmpty()) append(", ")
-                                                                        append(departamento)
+                                                                    if (pedido.ciudadId != null) {
+                                                                        idsPartes.add("Ciudad ID: ${pedido.ciudadId}")
                                                                     }
-                                                                    if (isEmpty()) append("N/A")
-                                                                },
-                                                                fontSize = 14.sp,
-                                                                color = TextPrimaryLight,
-                                                                fontWeight = FontWeight.SemiBold
-                                                            )
-                                                        }
+                                                                    if (idsPartes.isNotEmpty()) {
+                                                                        append(idsPartes.joinToString(", "))
+                                                                    } else {
+                                                                        append("N/A")
+                                                                    }
+                                                                }
+                                                            },
+                                                            fontSize = 14.sp,
+                                                            color = TextPrimaryLight,
+                                                            fontWeight = FontWeight.SemiBold
+                                                        )
                                                     }
-                                                    VerticalSpacer(8.dp)
                                                 }
+                                                VerticalSpacer(8.dp)
 
                                                 Text(
                                                     text = "Condición: ${pedido.condicionPago ?: "N/A"}",

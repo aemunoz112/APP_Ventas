@@ -18,6 +18,20 @@ class LocationRepository {
         return try {
             Log.d("LocationRepository", "Obteniendo departamento con ID: $departamentoId")
             val response = nodeApi.getDepartamentoById(departamentoId)
+            
+            // Manejar errores 429 (rate limit) y 200 con HTML (redirección a GitHub)
+            if (response.code() == 429) {
+                Log.w("LocationRepository", "Rate limit (429) al obtener departamento $departamentoId. Dev Tunnels requiere autenticación.")
+                return Result.success(null)
+            }
+            
+            // Verificar si el Content-Type es HTML (indica redirección a GitHub)
+            val contentType = response.headers()["Content-Type"] ?: ""
+            if (contentType.contains("text/html")) {
+                Log.w("LocationRepository", "Respuesta HTML recibida para departamento $departamentoId (Dev Tunnels requiere autenticación GitHub)")
+                return Result.success(null)
+            }
+            
             if (response.isSuccessful && response.body() != null) {
                 val data = response.body()!!.data
                 if (data.isNotEmpty()) {
@@ -31,11 +45,23 @@ class LocationRepository {
             } else {
                 val error = "Error al obtener departamento: ${response.code()} ${response.message()}"
                 Log.e("LocationRepository", error)
-                Result.failure(Exception(error))
+                // En caso de error, retornar null en lugar de fallar para no bloquear la UI
+                Result.success(null)
             }
+        } catch (e: com.google.gson.stream.MalformedJsonException) {
+            // Dev Tunnels está devolviendo HTML (página de login de GitHub) en lugar de JSON
+            Log.w("LocationRepository", "Respuesta HTML recibida (Dev Tunnels requiere autenticación) para departamento $departamentoId")
+            Result.success(null)
         } catch (e: Exception) {
-            Log.e("LocationRepository", "Excepción al obtener departamento: ${e.message}", e)
-            Result.failure(e)
+            // Solo loggear el mensaje, no el stack trace completo para evitar spam
+            val errorMsg = e.message ?: e.javaClass.simpleName
+            if (errorMsg.contains("MalformedJsonException") || errorMsg.contains("HTML")) {
+                Log.w("LocationRepository", "Respuesta no-JSON recibida para departamento $departamentoId (probablemente HTML de autenticación)")
+            } else {
+                Log.e("LocationRepository", "Excepción al obtener departamento: $errorMsg")
+            }
+            // En caso de excepción, retornar null en lugar de fallar
+            Result.success(null)
         }
     }
     
@@ -47,6 +73,19 @@ class LocationRepository {
             Log.d("LocationRepository", "Obteniendo ciudad con ID: $ciudadId")
             val response = nodeApi.getCiudadById(ciudadId)
             Log.d("LocationRepository", "Respuesta ciudad - Código: ${response.code()}, Exitosa: ${response.isSuccessful}")
+            
+            // Manejar errores 429 (rate limit) y 200 con HTML (redirección a GitHub)
+            if (response.code() == 429) {
+                Log.w("LocationRepository", "Rate limit (429) al obtener ciudad $ciudadId. Dev Tunnels requiere autenticación.")
+                return Result.success(null)
+            }
+            
+            // Verificar si el Content-Type es HTML (indica redirección a GitHub)
+            val contentType = response.headers()["Content-Type"] ?: ""
+            if (contentType.contains("text/html")) {
+                Log.w("LocationRepository", "Respuesta HTML recibida para ciudad $ciudadId (Dev Tunnels requiere autenticación GitHub)")
+                return Result.success(null)
+            }
             
             if (response.isSuccessful) {
                 val body = response.body()
@@ -67,18 +106,30 @@ class LocationRepository {
                     }
                 } else {
                     Log.e("LocationRepository", "Body de respuesta es null para ciudad ID: $ciudadId")
-                    Result.failure(Exception("Respuesta vacía del servidor"))
+                    // Retornar null en lugar de fallar para no bloquear la UI
+                    Result.success(null)
                 }
             } else {
                 val errorBody = response.errorBody()?.string()
                 val error = "Error al obtener ciudad: ${response.code()} ${response.message()}. Body: $errorBody"
                 Log.e("LocationRepository", error)
-                Result.failure(Exception(error))
+                // En caso de error, retornar null en lugar de fallar para no bloquear la UI
+                Result.success(null)
             }
+        } catch (e: com.google.gson.stream.MalformedJsonException) {
+            // Dev Tunnels está devolviendo HTML (página de login de GitHub) en lugar de JSON
+            Log.w("LocationRepository", "Respuesta HTML recibida (Dev Tunnels requiere autenticación) para ciudad $ciudadId")
+            Result.success(null)
         } catch (e: Exception) {
-            Log.e("LocationRepository", "Excepción al obtener ciudad ID $ciudadId: ${e.message}", e)
-            Log.e("LocationRepository", "Stack trace: ${e.stackTraceToString()}")
-            Result.failure(e)
+            // Solo loggear el mensaje, no el stack trace completo para evitar spam
+            val errorMsg = e.message ?: e.javaClass.simpleName
+            if (errorMsg.contains("MalformedJsonException") || errorMsg.contains("HTML")) {
+                Log.w("LocationRepository", "Respuesta no-JSON recibida para ciudad $ciudadId (probablemente HTML de autenticación)")
+            } else {
+                Log.e("LocationRepository", "Excepción al obtener ciudad: $errorMsg")
+            }
+            // En caso de excepción, retornar null en lugar de fallar
+            Result.success(null)
         }
     }
     

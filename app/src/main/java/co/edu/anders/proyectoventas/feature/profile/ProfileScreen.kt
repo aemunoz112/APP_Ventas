@@ -87,19 +87,18 @@ fun ProfileScreen(
         android.util.Log.d("ProfileScreen", "Departamento nombre guardado: '$departamentoNombre'")
         android.util.Log.d("ProfileScreen", "Ciudad nombre guardada: '$ciudadNombre'")
         
-        // Si hay IDs, SIEMPRE intentar obtener los nombres (incluso si ya hay nombres guardados)
+        // SIEMPRE intentar obtener los nombres si hay IDs y los nombres están vacíos, null o "N/A"
         if (departamentoId != null || ciudadId != null) {
-            // Verificar si necesita actualizar
-            val necesitaActualizarDept = departamentoNombre.isEmpty() || 
-                                         departamentoNombre == "N/A" ||
-                                         departamentoId != null
+            val necesitaActualizarDept = departamentoId != null && 
+                                        (departamentoNombre.isEmpty() || 
+                                         departamentoNombre == "N/A")
             
-            val necesitaActualizarCiudad = ciudadNombre.isEmpty() || 
-                                          ciudadNombre == "N/A" ||
-                                          ciudadId != null
+            val necesitaActualizarCiudad = ciudadId != null && 
+                                           (ciudadNombre.isEmpty() || 
+                                            ciudadNombre == "N/A")
             
-            android.util.Log.d("ProfileScreen", "Necesita actualizar Dept: $necesitaActualizarDept")
-            android.util.Log.d("ProfileScreen", "Necesita actualizar Ciudad: $necesitaActualizarCiudad")
+            android.util.Log.d("ProfileScreen", "Necesita actualizar Dept: $necesitaActualizarDept (ID: $departamentoId, Nombre actual: '$departamentoNombre')")
+            android.util.Log.d("ProfileScreen", "Necesita actualizar Ciudad: $necesitaActualizarCiudad (ID: $ciudadId, Nombre actual: '$ciudadNombre')")
             
             if (necesitaActualizarDept || necesitaActualizarCiudad) {
                 isLoadingUbicacion = true
@@ -107,29 +106,49 @@ fun ProfileScreen(
                 
                 coroutineScope.launch {
                     try {
-                        android.util.Log.d("ProfileScreen", "Llamando a getUbicacionNombres - Dept ID: $departamentoId, Ciudad ID: $ciudadId")
-                        val (deptNombre, ciuNombre) = locationRepository.getUbicacionNombres(
-                            departamentoId, 
-                            ciudadId
-                        )
+                        var nuevoDeptNombre = departamentoNombre
+                        var nuevoCiuNombre = ciudadNombre
                         
-                        android.util.Log.d("ProfileScreen", "Respuesta recibida - Dept: '$deptNombre', Ciudad: '$ciuNombre'")
-                        
-                        // Actualizar estados locales
-                        if (deptNombre != null && deptNombre.isNotEmpty() && deptNombre != "N/A") {
-                            android.util.Log.d("ProfileScreen", "Actualizando departamento a: $deptNombre")
-                            departamentoNombre = deptNombre
-                            userPreferences.updateUbicacionNombres(deptNombre, ciudadNombre)
-                        } else {
-                            android.util.Log.w("ProfileScreen", "Departamento nombre es null o vacío: '$deptNombre'")
+                        // Obtener departamento si es necesario
+                        if (necesitaActualizarDept && departamentoId != null) {
+                            android.util.Log.d("ProfileScreen", "Obteniendo departamento ID: $departamentoId")
+                            val result = locationRepository.getDepartamentoNombre(departamentoId)
+                            if (result.isSuccess) {
+                                val nombre = result.getOrNull()
+                                if (!nombre.isNullOrEmpty() && nombre != "N/A") {
+                                    nuevoDeptNombre = nombre
+                                    android.util.Log.d("ProfileScreen", "Departamento obtenido: $nuevoDeptNombre")
+                                } else {
+                                    android.util.Log.w("ProfileScreen", "Departamento nombre es null o vacío: '$nombre'")
+                                }
+                            } else {
+                                android.util.Log.w("ProfileScreen", "Error al obtener departamento: ${result.exceptionOrNull()?.message}")
+                            }
                         }
                         
-                        if (ciuNombre != null && ciuNombre.isNotEmpty() && ciuNombre != "N/A") {
-                            android.util.Log.d("ProfileScreen", "Actualizando ciudad a: $ciuNombre")
-                            ciudadNombre = ciuNombre
-                            userPreferences.updateUbicacionNombres(departamentoNombre, ciuNombre)
-                        } else {
-                            android.util.Log.w("ProfileScreen", "Ciudad nombre es null o vacío: '$ciuNombre'")
+                        // Obtener ciudad si es necesario
+                        if (necesitaActualizarCiudad && ciudadId != null) {
+                            android.util.Log.d("ProfileScreen", "Obteniendo ciudad ID: $ciudadId")
+                            val result = locationRepository.getCiudadNombre(ciudadId)
+                            if (result.isSuccess) {
+                                val nombre = result.getOrNull()
+                                if (!nombre.isNullOrEmpty() && nombre != "N/A") {
+                                    nuevoCiuNombre = nombre
+                                    android.util.Log.d("ProfileScreen", "Ciudad obtenida: $nuevoCiuNombre")
+                                } else {
+                                    android.util.Log.w("ProfileScreen", "Ciudad nombre es null o vacío: '$nombre'")
+                                }
+                            } else {
+                                android.util.Log.w("ProfileScreen", "Error al obtener ciudad: ${result.exceptionOrNull()?.message}")
+                            }
+                        }
+                        
+                        // Actualizar estados locales y preferencias
+                        if (nuevoDeptNombre != departamentoNombre || nuevoCiuNombre != ciudadNombre) {
+                            departamentoNombre = nuevoDeptNombre
+                            ciudadNombre = nuevoCiuNombre
+                            userPreferences.updateUbicacionNombres(nuevoDeptNombre, nuevoCiuNombre)
+                            android.util.Log.d("ProfileScreen", "Ubicación actualizada - Dept: '$nuevoDeptNombre', Ciudad: '$nuevoCiuNombre'")
                         }
                     } catch (e: Exception) {
                         android.util.Log.e("ProfileScreen", "Error al obtener ubicación: ${e.message}", e)
@@ -140,7 +159,7 @@ fun ProfileScreen(
                     }
                 }
             } else {
-                android.util.Log.d("ProfileScreen", "No se necesita actualizar ubicación")
+                android.util.Log.d("ProfileScreen", "No se necesita actualizar ubicación - ya tiene nombres válidos")
             }
         } else {
             android.util.Log.w("ProfileScreen", "No hay IDs de departamento o ciudad guardados")

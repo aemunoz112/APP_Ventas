@@ -51,8 +51,10 @@ fun OrderDetailScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val viewModel = remember { OrdersViewModel() }
+    val viewModel = remember { OrdersViewModel(context) }
     val uiState by viewModel.orderDetailState.collectAsState()
+    val clienteNombre by viewModel.clienteNombre.collectAsState()
+    val vendedorNombre by viewModel.vendedorNombre.collectAsState()
     
     // Cargar detalles del pedido cuando se abre la pantalla
     LaunchedEffect(orderId) {
@@ -167,36 +169,58 @@ fun OrderDetailScreen(
                                         value = pedido.condicionPago ?: "N/A"
                                     )
                                     
-                                    if (pedido.direccion != null || pedido.ciudadNombre != null || pedido.departamentoNombre != null) {
+                                    // Mostrar dirección si existe
+                                    if (pedido.direccion != null && pedido.direccion.isNotEmpty()) {
                                         InfoRow(
-                                            label = "Ubicación",
-                                            value = buildString {
-                                                if (pedido.direccion != null) {
-                                                    append(pedido.direccion)
-                                                    if (pedido.ciudadNombre != null || pedido.departamentoNombre != null) {
-                                                        append(", ")
-                                                    }
-                                                }
-                                                if (pedido.ciudadNombre != null) {
-                                                    append(pedido.ciudadNombre)
-                                                }
-                                                if (pedido.departamentoNombre != null) {
-                                                    if (pedido.ciudadNombre != null) append(", ")
-                                                    append(pedido.departamentoNombre)
-                                                }
-                                                if (isEmpty()) append("N/A")
-                                            }
+                                            label = "Dirección",
+                                            value = pedido.direccion
                                         )
                                     }
                                     
+                                    // Mostrar departamento y ciudad siempre que estén disponibles
+                                    val ubicacionTexto = buildString {
+                                        val partes = mutableListOf<String>()
+                                        
+                                        if (!pedido.departamentoNombre.isNullOrEmpty()) {
+                                            partes.add(pedido.departamentoNombre!!)
+                                        }
+                                        
+                                        if (!pedido.ciudadNombre.isNullOrEmpty()) {
+                                            partes.add(pedido.ciudadNombre!!)
+                                        }
+                                        
+                                        if (partes.isNotEmpty()) {
+                                            append(partes.joinToString(", "))
+                                        } else {
+                                            // Si hay IDs pero no nombres, mostrar IDs
+                                            val idsPartes = mutableListOf<String>()
+                                            if (pedido.departamentoId != null) {
+                                                idsPartes.add("Dept ID: ${pedido.departamentoId}")
+                                            }
+                                            if (pedido.ciudadId != null) {
+                                                idsPartes.add("Ciudad ID: ${pedido.ciudadId}")
+                                            }
+                                            if (idsPartes.isNotEmpty()) {
+                                                append(idsPartes.joinToString(", "))
+                                            } else {
+                                                append("N/A")
+                                            }
+                                        }
+                                    }
+                                    
                                     InfoRow(
-                                        label = "ID Cliente",
-                                        value = pedido.idCliente.toString()
+                                        label = "Ubicación",
+                                        value = ubicacionTexto
                                     )
                                     
                                     InfoRow(
-                                        label = "ID Vendedor",
-                                        value = pedido.idVendedor.toString()
+                                        label = "Cliente",
+                                        value = clienteNombre ?: "ID: ${pedido.idCliente}"
+                                    )
+                                    
+                                    InfoRow(
+                                        label = "Vendedor",
+                                        value = vendedorNombre ?: "ID: ${pedido.idVendedor}"
                                     )
                                 }
                             }
@@ -237,17 +261,19 @@ fun OrderDetailScreen(
                                                 verticalAlignment = Alignment.CenterVertically
                                             ) {
                                                 Text(
-                                                    text = "Item #${detalle.numeroLinea ?: (index + 1)}",
+                                                    text = detalle.producto?.nombreProducto 
+                                                        ?: "Producto #${detalle.idProducto}",
                                                     fontSize = 16.sp,
                                                     fontWeight = FontWeight.Bold,
-                                                    color = TextPrimaryLight
+                                                    color = TextPrimaryLight,
+                                                    modifier = Modifier.weight(1f)
                                                 )
-                                                if (detalle.producto != null) {
+                                                if (detalle.numeroLinea != null) {
                                                     Text(
-                                                        text = detalle.producto.nombreProducto ?: "Producto #${detalle.idProducto}",
-                                                        fontSize = 14.sp,
-                                                        fontWeight = FontWeight.SemiBold,
-                                                        color = PrimaryBlue
+                                                        text = "Línea #${detalle.numeroLinea}",
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Normal,
+                                                        color = TextSecondaryLight
                                                     )
                                                 }
                                             }

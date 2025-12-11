@@ -16,10 +16,10 @@ object NodeApiClient {
     private const val NODE_API_BASE_URL = "https://3sm4zxjz-8001.use.devtunnels.ms/"
     
     /**
-     * Interceptor para logging (solo en desarrollo)
+     * Interceptor para logging (solo headers, no body para evitar spam de HTML)
      */
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
+        level = HttpLoggingInterceptor.Level.HEADERS // Solo headers, no body
     }
     
     /**
