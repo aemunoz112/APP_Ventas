@@ -164,6 +164,16 @@ class AuthRepository(private val userPreferences: UserPreferences) {
                         "2. Que el backend FastAPI esté activo\n" +
                         "3. Que la URL sea correcta: https://nonceremonially-unwary-livia.ngrok-free.app/auth/login"
                     }
+                    errorBody.contains("ERR_NGROK_3200", ignoreCase = true) || 
+                    errorBody.contains("is offline", ignoreCase = true) -> {
+                        android.util.Log.e("AuthRepository", "Ngrok está offline")
+                        "❌ Ngrok está offline\n\n" +
+                        "El túnel de ngrok no está activo. Por favor:\n\n" +
+                        "1. Abre una terminal y ejecuta:\n   ngrok http 8000\n\n" +
+                        "2. Copia la nueva URL de ngrok (si cambió)\n\n" +
+                        "3. Actualiza la URL en RetrofitClient.kt\n\n" +
+                        "4. Verifica que tu backend FastAPI esté corriendo"
+                    }
                     response.code() == 401 -> "Email o contraseña incorrectos"
                     response.code() == 404 -> {
                         if (errorBody.contains("Not Found") || errorBody.contains("404")) {

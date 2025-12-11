@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
     
     // URL base de la API usando ngrok
-    private const val BASE_URL = "https://nonceremonially-unwary-livia.ngrok-free.app/"
+    private const val BASE_URL = " https://nonceremonially-unwary-livia.ngrok-free.dev/"
     
     // Token de autenticación (se configurará después del login)
     private var authToken: String? = null
