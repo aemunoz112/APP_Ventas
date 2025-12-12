@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit
  */
 object NodeApiClient {
     
-    // URL de la API de Node.js usando Dev Tunnels
+    // URL de la API de Node.js usando Dev Tunnels -  reciente cambio en la URL
     private const val NODE_API_BASE_URL = "https://3sm4zxjz-8001.use.devtunnels.ms/"
     
     /**
