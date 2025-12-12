@@ -122,7 +122,7 @@ fun BottomNavBar(
                         unselectedIconColor = Color.White.copy(alpha = 0.68f),
                         unselectedTextColor = Color.White.copy(alpha = 0.68f)
                     ),
-                    alwaysShowLabel = true,
+                    alwaysShowLabel = true,  //Ajuste de pading para la barra inferior
                     modifier = Modifier.padding(top = 24.dp, bottom = 4.dp)
                 )
             }
