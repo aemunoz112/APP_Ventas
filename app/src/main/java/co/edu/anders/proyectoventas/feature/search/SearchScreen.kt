@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Scaffold
@@ -27,10 +29,12 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -61,7 +65,7 @@ fun SearchScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val viewModel = remember { ProductsViewModel() }
+    val viewModel: ProductsViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
     
     var searchQuery by remember { mutableStateOf("") }
@@ -92,10 +96,22 @@ fun SearchScreen(
     ProyectoVentasTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = Color.White
+            color = Color.Transparent
         ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                PrimaryBlue.copy(alpha = 0.08f),
+                                Color.White
+                            )
+                        )
+                    )
+            )
             Scaffold(
-                containerColor = Color.White,
+                containerColor = Color.Transparent,
                 topBar = {
                     CustomAppBar(
                         title = "Buscar Productos"
@@ -128,7 +144,6 @@ fun SearchScreen(
                     },
                     modifier = modifier
                         .fillMaxSize()
-                        .background(Color.White)
                         .padding(padding)
                 ) {
                     Column(
@@ -136,8 +151,19 @@ fun SearchScreen(
                             .fillMaxSize()
                             .padding(horizontal = 20.dp)
                             .padding(top = 20.dp),
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+                    Text(
+                        text = "Encuentra productos de acero",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimaryLight
+                    )
+                    Text(
+                        text = "Busca por código, nombre o categoría.",
+                        fontSize = 13.sp,
+                        color = TextSecondaryLight
+                    )
                     SearchBar(
                         query = searchQuery,
                         onQueryChange = { searchQuery = it },

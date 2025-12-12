@@ -5,14 +5,20 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -29,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -169,10 +176,10 @@ fun ProfileScreen(
     ProyectoVentasTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = Color.White
+            color = Color.Transparent
         ) {
             Scaffold(
-                containerColor = Color.White,
+                containerColor = Color.Transparent,
                 topBar = {
                     CustomAppBar(
                         title = "Mi Perfil"
@@ -194,151 +201,240 @@ fun ProfileScreen(
                     )
                 }
             ) { padding ->
-                Column(
-                    modifier = modifier
+                Box(
+                    modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.White)
-                        .verticalScroll(rememberScrollState())
-                        .padding(padding)
-                        .padding(horizontal = 20.dp)
-                        .padding(top = 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
-                ) {
-                    // Avatar placeholder
-                    Box(
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .background(PrimaryBlue)
-                            .size(120.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = if (userName.isNotEmpty()) userName.getInitials() else "U",
-                            fontSize = 40.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = co.edu.anders.proyectoventas.ui.theme.TextPrimaryDark
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    PrimaryBlue.copy(alpha = 0.12f),
+                                    Color.White
+                                )
+                            )
                         )
-                    }
-                    
-                    VerticalSpacer(8.dp)
-                    
-                    Text(
-                        text = userName.ifEmpty { "Usuario" },
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimaryLight
-                    )
-                    
-                    if (rolName.isNotEmpty()) {
-                        androidx.compose.material3.Card(
-                            modifier = Modifier.padding(horizontal = 20.dp),
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-                            colors = androidx.compose.material3.CardDefaults.cardColors(
-                                containerColor = PrimaryBlue.copy(alpha = 0.1f)
-                            )
+                ) {
+                    Column(
+                        modifier = modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(padding)
+                            .padding(horizontal = 20.dp, vertical = 24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(18.dp)
+                    ) {
+                        HeaderCard(
+                            userName = userName,
+                            userEmail = userEmail,
+                            rolName = rolName
+                        )
+                        
+                        InfoGrid(
+                            userEmail = userEmail,
+                            departamentoNombre = departamentoNombre,
+                            ciudadNombre = ciudadNombre,
+                            rolName = rolName,
+                            telefono = userPreferences.getUserTelefono(),
+                            cedula = userPreferences.getUserCedula(),
+                            estado = userPreferences.getUserEstado(),
+                            isLoadingUbicacion = isLoadingUbicacion
+                        )
+                        
+                        Divider(color = Color.LightGray.copy(alpha = 0.35f))
+                        
+                        ElevatedCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(18.dp),
+                            colors = CardDefaults.elevatedCardColors(
+                                containerColor = Color.White
+                            ),
+                            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
                         ) {
-                            Text(
-                                text = rolName,
-                                fontSize = 14.sp,
-                                color = PrimaryBlue,
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                            )
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    text = "Acciones",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = TextPrimaryLight
+                                )
+                                
+                                PrimaryButton(
+                                    text = "Cerrar sesión",
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            authRepository.logout()
+                                            Toast.makeText(context, "Sesión cerrada", Toast.LENGTH_SHORT).show()
+                                            onLogout()
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
                         }
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
                     }
-                    
-                    VerticalSpacer(16.dp)
-                    Divider(
-                        color = Color.Gray.copy(alpha = 0.2f),
-                        thickness = 1.dp,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    VerticalSpacer(8.dp)
-                    
-                    Text(
-                        text = "Información Personal",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimaryLight,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    
-                    InfoCard(
-                        title = "Rol",
-                        value = rolName.ifEmpty { "N/A" },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    
-                    InfoCard(
-                        title = "Email",
-                        value = userEmail.ifEmpty { "N/A" },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    
-                    InfoCard(
-                        title = "Teléfono",
-                        value = userPreferences.getUserTelefono().ifEmpty { "N/A" },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    
-                    InfoCard(
-                        title = "Cédula",
-                        value = userPreferences.getUserCedula().ifEmpty { "N/A" },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    
-                    InfoCard(
-                        title = "Estado",
-                        value = userPreferences.getUserEstado().ifEmpty { "N/A" },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    
-                    InfoCard(
-                        title = "Departamento",
-                        value = if (isLoadingUbicacion && departamentoNombre.isEmpty()) {
-                            "Cargando..."
-                        } else {
-                            departamentoNombre.ifEmpty { "N/A" }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    
-                    InfoCard(
-                        title = "Ciudad",
-                        value = if (isLoadingUbicacion && ciudadNombre.isEmpty()) {
-                            "Cargando..."
-                        } else {
-                            ciudadNombre.ifEmpty { "N/A" }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    
-                    VerticalSpacer(32.dp)
-                    
-                    Divider(
-                        color = Color.Gray.copy(alpha = 0.2f),
-                        thickness = 1.dp,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    
-                    VerticalSpacer(24.dp)
-                    
-                    // Botón de cerrar sesión
-                    PrimaryButton(
-                        text = "Cerrar Sesión",
-                        onClick = {
-                            authRepository.logout()
-                            Toast.makeText(context, "Sesión cerrada", Toast.LENGTH_SHORT).show()
-                            onLogout()
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    
-                    VerticalSpacer(24.dp)
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun HeaderCard(userName: String, userEmail: String, rolName: String) {
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 6.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(PrimaryBlue)
+                    .size(110.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = if (userName.isNotEmpty()) userName.getInitials() else "U",
+                    fontSize = 38.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = co.edu.anders.proyectoventas.ui.theme.TextPrimaryDark
+                )
+            }
+            
+            Text(
+                text = userName.ifEmpty { "Usuario" },
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimaryLight
+            )
+            
+            if (userEmail.isNotEmpty()) {
+                Text(
+                    text = userEmail,
+                    fontSize = 14.sp,
+                    color = TextSecondaryLight
+                )
+            }
+            
+            if (rolName.isNotEmpty()) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RolePill(rolName)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RolePill(text: String) {
+    Surface(
+        color = PrimaryBlue.copy(alpha = 0.12f),
+        contentColor = PrimaryBlue,
+        shape = RoundedCornerShape(14.dp)
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 13.sp
+        )
+    }
+}
+
+@Composable
+private fun InfoGrid(
+    userEmail: String,
+    departamentoNombre: String,
+    ciudadNombre: String,
+    rolName: String,
+    telefono: String,
+    cedula: String,
+    estado: String,
+    isLoadingUbicacion: Boolean
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            InfoCard(
+                title = "Correo",
+                value = userEmail.ifEmpty { "N/A" },
+                modifier = Modifier.weight(1f)
+            )
+            InfoCard(
+                title = "Rol",
+                value = rolName.ifEmpty { "N/A" },
+                modifier = Modifier.weight(1f)
+            )
+        }
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            InfoCard(
+                title = "Departamento",
+                value = if (isLoadingUbicacion && departamentoNombre.isEmpty()) {
+                    "Cargando..."
+                } else {
+                    departamentoNombre.ifEmpty { "N/A" }
+                },
+                modifier = Modifier.weight(1f)
+            )
+            InfoCard(
+                title = "Ciudad",
+                value = if (isLoadingUbicacion && ciudadNombre.isEmpty()) {
+                    "Cargando..."
+                } else {
+                    ciudadNombre.ifEmpty { "N/A" }
+                },
+                modifier = Modifier.weight(1f)
+            )
+        }
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            InfoCard(
+                title = "Teléfono",
+                value = telefono.ifEmpty { "N/A" },
+                modifier = Modifier.weight(1f)
+            )
+            InfoCard(
+                title = "Cédula",
+                value = cedula.ifEmpty { "N/A" },
+                modifier = Modifier.weight(1f)
+            )
+        }
+        
+        InfoCard(
+            title = "Estado",
+            value = estado.ifEmpty { "N/A" },
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 

@@ -2,7 +2,9 @@ package co.edu.anders.proyectoventas.ui.components.bottomnav
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -23,6 +25,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -51,60 +55,74 @@ fun BottomNavBar(
         BottomNavItem("Pedidos", Icons.Default.Receipt, "orders"),
         BottomNavItem("Perfil", Icons.Default.Person, "profile")
     )
-    
-    NavigationBar(
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(72.dp)
-            .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-            .border(
-                width = 1.dp,
-                color = Color.White.copy(alpha = 0.15f),
-                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-            ),
-        containerColor = PrimaryBlue,
-        contentColor = Color.White,
-        tonalElevation = 12.dp
-    ) {
-        items.forEachIndexed { index, item ->
-            val isSelected = selectedItem == index
-            
-            // Animación de escala para el icono seleccionado
-            val iconScale by animateFloatAsState(
-                targetValue = if (isSelected) 1.15f else 1f,
-                animationSpec = tween(durationMillis = 200),
-                label = "icon_scale_$index"
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .shadow(
+                elevation = 10.dp,
+                shape = RoundedCornerShape(24.dp),
+                clip = false
             )
-            
-            NavigationBarItem(
-                icon = {
-                    Icon(
-                        imageVector = item.icon,
-                        contentDescription = item.label,
-                        modifier = Modifier
-                            .padding(bottom = 2.dp)
-                            .scale(iconScale)
+            .background(
+                brush = Brush.horizontalGradient(
+                    listOf(
+                        PrimaryBlue.copy(alpha = 0.92f),
+                        PrimaryBlueDark.copy(alpha = 0.92f)
                     )
-                },
-                label = {
-                    Text(
-                        text = item.label,
-                        fontSize = 11.sp,
-                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                        letterSpacing = 0.3.sp
-                    )
-                },
-                selected = isSelected,
-                onClick = { onItemSelected(index) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color.White,
-                    selectedTextColor = Color.White,
-                    indicatorColor = Color.White.copy(alpha = 0.25f),
-                    unselectedIconColor = Color.White.copy(alpha = 0.65f),
-                    unselectedTextColor = Color.White.copy(alpha = 0.65f)
                 ),
-                modifier = Modifier.padding(horizontal = 4.dp)
+                shape = RoundedCornerShape(24.dp)
             )
+    ) {
+        NavigationBar(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(72.dp)
+                .clip(RoundedCornerShape(24.dp)),
+            containerColor = Color.Transparent,
+            contentColor = Color.White,
+            tonalElevation = 0.dp
+        ) {
+            items.forEachIndexed { index, item ->
+                val isSelected = selectedItem == index
+                
+                // Animación de escala para el icono seleccionado
+                val iconScale by animateFloatAsState(
+                    targetValue = if (isSelected) 1.15f else 1f,
+                    animationSpec = tween(durationMillis = 200),
+                    label = "icon_scale_$index"
+                )
+                
+                NavigationBarItem(
+                    icon = {
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = item.label,
+                            modifier = Modifier
+                                .padding(bottom = 2.dp)
+                                .scale(iconScale)
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = item.label,
+                            fontSize = 11.sp,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            letterSpacing = 0.3.sp
+                        )
+                    },
+                    selected = isSelected,
+                    onClick = { onItemSelected(index) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = Color.White,
+                        selectedTextColor = Color.White,
+                        indicatorColor = Color.White.copy(alpha = 0.16f),
+                        unselectedIconColor = Color.White.copy(alpha = 0.68f),
+                        unselectedTextColor = Color.White.copy(alpha = 0.68f)
+                    ),
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
+            }
         }
     }
 }

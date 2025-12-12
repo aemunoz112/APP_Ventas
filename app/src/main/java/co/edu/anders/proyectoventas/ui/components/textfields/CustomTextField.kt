@@ -35,15 +35,31 @@ fun CustomTextField(
     trailingIcon: @Composable (() -> Unit)? = null,
     isError: Boolean = false,
     errorMessage: String = "",
-    colors: TextFieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = PrimaryBlue,
-        unfocusedBorderColor = BorderLight,
-        focusedLabelColor = PrimaryBlue,
+    isValid: Boolean = false,
+    colors: TextFieldColors? = null
+) {
+    val defaultColors = colors ?: OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = when {
+            isError -> Color(0xFFD32F2F) // Rojo para error
+            isValid && value.isNotEmpty() -> Color(0xFF388E3C) // Verde para válido
+            else -> PrimaryBlue
+        },
+        unfocusedBorderColor = when {
+            isError -> Color(0xFFD32F2F)
+            isValid && value.isNotEmpty() -> Color(0xFF388E3C)
+            else -> BorderLight
+        },
+        focusedLabelColor = when {
+            isError -> Color(0xFFD32F2F)
+            isValid && value.isNotEmpty() -> Color(0xFF388E3C)
+            else -> PrimaryBlue
+        },
         unfocusedLabelColor = TextSecondaryLight,
         focusedTextColor = TextPrimaryLight,
-        unfocusedTextColor = TextPrimaryLight
+        unfocusedTextColor = TextPrimaryLight,
+        errorSupportingTextColor = Color(0xFFD32F2F)
     )
-) {
+    
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
@@ -60,10 +76,10 @@ fun CustomTextField(
         trailingIcon = trailingIcon,
         isError = isError,
         supportingText = if (isError && errorMessage.isNotEmpty()) {
-            { Text(errorMessage) }
+            { Text(errorMessage, color = Color(0xFFD32F2F)) }
         } else null,
         shape = RoundedCornerShape(12.dp),
-        colors = colors
+        colors = defaultColors
     )
 }
 

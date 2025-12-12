@@ -2,6 +2,7 @@ package co.edu.anders.proyectoventas.feature.assistant
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,6 +14,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -76,10 +78,22 @@ fun AssistantScreen(
     ProyectoVentasTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = Color.White
+            color = Color.Transparent
         ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFF0F172A).copy(alpha = 0.12f),
+                                Color.White
+                            )
+                        )
+                    )
+            )
             Scaffold(
-                containerColor = Color.White,
+                containerColor = Color.Transparent,
                 topBar = {
                     CustomAppBar(
                         title = "Asistente Virtual"
@@ -101,25 +115,24 @@ fun AssistantScreen(
                     )
                 }
             ) { padding ->
-                Column(modifier = modifier.fillMaxSize().background(Color.White)) {
+                Column(modifier = modifier.fillMaxSize()) {
                     LazyColumn(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxWidth()
-                            .background(Color.White)
                             .padding(padding)
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                         state = listState,
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                items(messages) { message ->
-                    ChatBubble(
-                        message = message.message,
-                        isUser = message.isUser,
-                        timestamp = message.timestamp,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
+                        items(messages) { message ->
+                            ChatBubble(
+                                message = message.message,
+                                isUser = message.isUser,
+                                timestamp = message.timestamp,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                     }
                     
                     ChatInput(

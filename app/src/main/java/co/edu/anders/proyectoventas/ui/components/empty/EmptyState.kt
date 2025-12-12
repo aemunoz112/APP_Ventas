@@ -59,7 +59,7 @@ fun EmptyState(
             ) {
                 Icon(
                     imageVector = defaultIcon,
-                    contentDescription = null,
+                    contentDescription = title,
                     modifier = Modifier.size(40.dp),
                     tint = PrimaryBlue.copy(alpha = 0.6f)
                 )

@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,10 +24,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -51,7 +55,7 @@ fun OrderDetailScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val viewModel = remember { OrdersViewModel(context) }
+    val viewModel: OrdersViewModel = viewModel { OrdersViewModel(context) }
     val uiState by viewModel.orderDetailState.collectAsState()
     val clienteNombre by viewModel.clienteNombre.collectAsState()
     val vendedorNombre by viewModel.vendedorNombre.collectAsState()
@@ -71,9 +75,21 @@ fun OrderDetailScreen(
     ProyectoVentasTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = Color.White
+            color = Color.Transparent
         ) {
-            Column(modifier = modifier.fillMaxSize().background(Color.White)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                PrimaryBlue.copy(alpha = 0.1f),
+                                Color.White
+                            )
+                        )
+                    )
+            )
+            Column(modifier = modifier.fillMaxSize()) {
                 CustomAppBar(
                     title = "Detalle del Pedido",
                     onNavigationClick = onNavigateBack
@@ -95,7 +111,6 @@ fun OrderDetailScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(Color.White)
                                 .verticalScroll(rememberScrollState())
                                 .padding(horizontal = 20.dp)
                                 .padding(top = 24.dp)
@@ -105,11 +120,11 @@ fun OrderDetailScreen(
                             // Encabezado del pedido
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
+                                shape = RoundedCornerShape(18.dp),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = SurfaceLight
+                                    containerColor = Color.White
                                 ),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                             ) {
                                 Column(
                                     modifier = Modifier
@@ -135,7 +150,7 @@ fun OrderDetailScreen(
                                     }
                                     
                                     Divider(
-                                        color = Color.White.copy(alpha = 0.1f),
+                                        color = Color.LightGray.copy(alpha = 0.3f),
                                         thickness = 1.dp
                                     )
                                     

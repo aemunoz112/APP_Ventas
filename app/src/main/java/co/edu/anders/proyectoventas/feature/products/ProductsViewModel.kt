@@ -32,10 +32,6 @@ class ProductsViewModel : ViewModel() {
     private val _products = MutableStateFlow<List<Producto>>(emptyList())
     val products: StateFlow<List<Producto>> = _products.asStateFlow()
     
-    init {
-        loadProducts()
-    }
-    
     /**
      * Carga todos los productos desde la API
      */

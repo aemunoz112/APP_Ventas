@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 
 /**
  * Estados de la UI para pedidos
@@ -57,10 +58,6 @@ class OrdersViewModel(
     
     private val _vendedorNombre = MutableStateFlow<String?>(null)
     val vendedorNombre: StateFlow<String?> = _vendedorNombre.asStateFlow()
-    
-    init {
-        loadOrders()
-    }
     
     /**
      * Carga todos los pedidos desde la API y obtiene nombres de ubicación
@@ -185,101 +182,102 @@ class OrdersViewModel(
         _vendedorNombre.value = null
         
         viewModelScope.launch {
-            val orderResult = repository.getOrderById(orderId)
-            val detailsResult = repository.getOrderDetails(orderId)
-            
-            if (orderResult.isSuccess && detailsResult.isSuccess) {
-                var order = orderResult.getOrNull()!!
-                val details = detailsResult.getOrNull() ?: emptyList()
-                
-                Log.d("OrdersViewModel", "Detalle pedido ${order.id} - Dept ID: ${order.departamentoId}, Ciudad ID: ${order.ciudadId}")
-                Log.d("OrdersViewModel", "Detalle pedido ${order.id} - Dept Nombre inicial: ${order.departamentoNombre}, Ciudad Nombre inicial: ${order.ciudadNombre}")
-                
-                // SIEMPRE intentar obtener nombres de departamento y ciudad si hay IDs
-                // Incluso si ya hay nombres, intentar actualizarlos por si acaso están vacíos o son "N/A"
-                var deptNombre = order.departamentoNombre
-                var ciuNombre = order.ciudadNombre
-                
-                if (order.departamentoId != null && (deptNombre == null || deptNombre.isEmpty() || deptNombre == "N/A")) {
-                    Log.d("OrdersViewModel", "Obteniendo nombre de departamento para ID: ${order.departamentoId}")
-                    val result = locationRepository.getDepartamentoNombre(order.departamentoId)
-                    if (result.isSuccess) {
-                        val nombre = result.getOrNull()
-                        if (!nombre.isNullOrEmpty() && nombre != "N/A") {
-                            deptNombre = nombre
-                            Log.d("OrdersViewModel", "Departamento obtenido: $deptNombre")
-                        }
-                    }
+            try {
+                // Ejecutar en paralelo para reducir el tiempo de espera
+                val (orderResult, detailsResult) = kotlinx.coroutines.coroutineScope {
+                    val orderDeferred = async { repository.getOrderById(orderId) }
+                    val detailsDeferred = async { repository.getOrderDetails(orderId) }
+                    orderDeferred.await() to detailsDeferred.await()
                 }
                 
-                if (order.ciudadId != null && (ciuNombre == null || ciuNombre.isEmpty() || ciuNombre == "N/A")) {
-                    Log.d("OrdersViewModel", "Obteniendo nombre de ciudad para ID: ${order.ciudadId}")
-                    val result = locationRepository.getCiudadNombre(order.ciudadId)
-                    if (result.isSuccess) {
-                        val nombre = result.getOrNull()
-                        if (!nombre.isNullOrEmpty() && nombre != "N/A") {
-                            ciuNombre = nombre
-                            Log.d("OrdersViewModel", "Ciudad obtenida: $ciuNombre")
-                        }
-                    }
-                }
-                
-                order = order.copy(
-                    departamentoNombre = deptNombre,
-                    ciudadNombre = ciuNombre
-                )
-                
-                Log.d("OrdersViewModel", "Detalle pedido ${order.id} - FINAL - Dept: ${order.departamentoNombre}, Ciudad: ${order.ciudadNombre}")
-                
-                // Obtener información del cliente y vendedor
-                loadClienteInfo(order.idCliente)
-                loadVendedorInfo(order.idVendedor)
-                
-                // Obtener nombres de productos para cada detalle
-                val detallesConProductos = details.map { detalle ->
-                    if (detalle.producto?.nombreProducto == null || detalle.producto?.nombreProducto?.isEmpty() == true) {
-                        // Si no tiene producto o no tiene nombre, obtenerlo
-                        val productoNombre = loadProductoNombre(detalle.idProducto)
-                        if (productoNombre != null) {
-                            // Crear o actualizar el producto con el nombre obtenido
-                            val productoActualizado = detalle.producto?.copy(
-                                nombreProducto = productoNombre
-                            ) ?: co.edu.anders.proyectoventas.data.models.Producto(
-                                id = detalle.idProducto,
-                                codigoProducto = "",
-                                nombreProducto = productoNombre,
-                                descripcion = null,
-                                categoria = null,
-                                unidadMedida = null,
-                                estado = null
-                            )
-                            detalle.copy(producto = productoActualizado)
-                        } else {
-                            // Si no se pudo obtener, crear un producto mínimo con el ID
-                            val productoMinimo = detalle.producto?.copy(
-                                nombreProducto = "Producto #${detalle.idProducto}"
-                            ) ?: co.edu.anders.proyectoventas.data.models.Producto(
-                                id = detalle.idProducto,
-                                codigoProducto = "",
-                                nombreProducto = "Producto #${detalle.idProducto}",
-                                descripcion = null,
-                                categoria = null,
-                                unidadMedida = null,
-                                estado = null
-                            )
-                            detalle.copy(producto = productoMinimo)
-                        }
+                if (orderResult.isSuccess) {
+                    var order = orderResult.getOrNull()!!
+                    val details = if (detailsResult.isSuccess) {
+                        detailsResult.getOrNull() ?: emptyList()
                     } else {
-                        detalle
+                        Log.w("OrdersViewModel", "Detalles no disponibles: ${detailsResult.exceptionOrNull()?.message}")
+                        emptyList()
                     }
+                    
+                    // Publicar de inmediato datos base para evitar spinner largo
+                    _orderDetailState.value = OrderDetailUiState.Success(order, details)
+                    
+                    // Enriquecer ubicación sin bloquear UI
+                    viewModelScope.launch {
+                        try {
+                            var deptNombre = order.departamentoNombre
+                            var ciuNombre = order.ciudadNombre
+                            
+                            if (order.departamentoId != null && (deptNombre.isNullOrEmpty() || deptNombre == "N/A")) {
+                                locationRepository.getDepartamentoNombre(order.departamentoId).getOrNull()?.let {
+                                    deptNombre = it
+                                }
+                            }
+                            
+                            if (order.ciudadId != null && (ciuNombre.isNullOrEmpty() || ciuNombre == "N/A")) {
+                                locationRepository.getCiudadNombre(order.ciudadId).getOrNull()?.let {
+                                    ciuNombre = it
+                                }
+                            }
+                            
+                            val current = _orderDetailState.value
+                            if (current is OrderDetailUiState.Success) {
+                                _orderDetailState.value = current.copy(
+                                    order = current.order.copy(
+                                        departamentoNombre = deptNombre,
+                                        ciudadNombre = ciuNombre
+                                    )
+                                )
+                            }
+                        } catch (e: Exception) {
+                            Log.w("OrdersViewModel", "No se pudo enriquecer ubicación: ${e.message}")
+                        }
+                    }
+                    
+                    // Enriquecer productos sin bloquear UI
+                    val sinNombre = details.filter { it.producto?.nombreProducto.isNullOrEmpty() }
+                    sinNombre.forEach { detalle ->
+                        viewModelScope.launch {
+                            try {
+                                val nombre = loadProductoNombre(detalle.idProducto)
+                                if (!nombre.isNullOrEmpty()) {
+                                    val current = _orderDetailState.value
+                                    if (current is OrderDetailUiState.Success) {
+                                        val actualizados = current.details.map { d ->
+                                            if (d.id == detalle.id) {
+                                                val prodAct = d.producto?.copy(nombreProducto = nombre)
+                                                    ?: co.edu.anders.proyectoventas.data.models.Producto(
+                                                        id = detalle.idProducto,
+                                                        codigoProducto = "",
+                                                        nombreProducto = nombre,
+                                                        descripcion = null,
+                                                        categoria = null,
+                                                        unidadMedida = null,
+                                                        estado = null
+                                                    )
+                                                d.copy(producto = prodAct)
+                                            } else d
+                                        }
+                                        _orderDetailState.value = current.copy(details = actualizados)
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                Log.w("OrdersViewModel", "No se pudo obtener nombre de producto ${detalle.idProducto}: ${e.message}")
+                            }
+                        }
+                    }
+                    
+                    // Cargar cliente y vendedor sin bloquear UI
+                    viewModelScope.launch { loadClienteInfo(order.idCliente) }
+                    viewModelScope.launch { loadVendedorInfo(order.idVendedor) }
+                } else {
+                    val errorMessage = orderResult.exceptionOrNull()?.message
+                        ?: detailsResult.exceptionOrNull()?.message
+                        ?: "Error al cargar detalles del pedido"
+                    _orderDetailState.value = OrderDetailUiState.Error(errorMessage)
                 }
-                
-                _orderDetailState.value = OrderDetailUiState.Success(order, detallesConProductos)
-            } else {
-                val errorMessage = orderResult.exceptionOrNull()?.message 
-                    ?: detailsResult.exceptionOrNull()?.message 
-                    ?: "Error al cargar detalles del pedido"
-                _orderDetailState.value = OrderDetailUiState.Error(errorMessage)
+            } catch (e: Exception) {
+                _orderDetailState.value = OrderDetailUiState.Error("Error inesperado: ${e.message}")
             }
         }
     }

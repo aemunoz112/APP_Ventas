@@ -93,7 +93,7 @@ fun DashboardActionCard(
             ) {
                 Icon(
                     imageVector = icon,
-                    contentDescription = null,
+                    contentDescription = "$title icon",
                     tint = iconTint,
                     modifier = Modifier.size(32.dp)
                 )
@@ -117,7 +117,7 @@ fun DashboardActionCard(
             
             Icon(
                 imageVector = Icons.Default.ChevronRight,
-                contentDescription = null,
+                contentDescription = "Navegar a $title",
                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
             )
         }

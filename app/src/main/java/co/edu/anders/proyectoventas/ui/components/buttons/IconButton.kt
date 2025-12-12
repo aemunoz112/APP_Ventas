@@ -19,7 +19,8 @@ fun IconButtonComponent(
     enabled: Boolean = true,
     backgroundColor: Color = PrimaryBlue,
     iconColor: Color = TextPrimaryDark,
-    iconSize: androidx.compose.ui.unit.Dp = 24.dp
+    iconSize: androidx.compose.ui.unit.Dp = 24.dp,
+    contentDescription: String? = null
 ) {
     IconButton(
         onClick = onClick,
@@ -34,7 +35,7 @@ fun IconButtonComponent(
     ) {
         androidx.compose.material3.Icon(
             imageVector = icon,
-            contentDescription = null,
+            contentDescription = contentDescription,
             modifier = Modifier.size(iconSize)
         )
     }
