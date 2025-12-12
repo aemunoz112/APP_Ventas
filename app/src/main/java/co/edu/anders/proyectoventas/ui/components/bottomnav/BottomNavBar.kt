@@ -3,11 +3,11 @@ package co.edu.anders.proyectoventas.ui.components.bottomnav
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Chat
@@ -30,11 +30,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import co.edu.anders.proyectoventas.ui.theme.PrimaryBlue
 import co.edu.anders.proyectoventas.ui.theme.PrimaryBlueDark
-import co.edu.anders.proyectoventas.ui.theme.TextPrimaryDark
 
 data class BottomNavItem(
     val label: String,
@@ -55,10 +55,11 @@ fun BottomNavBar(
         BottomNavItem("Pedidos", Icons.Default.Receipt, "orders"),
         BottomNavItem("Perfil", Icons.Default.Person, "profile")
     )
+
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 16.dp)
             .shadow(
                 elevation = 10.dp,
                 shape = RoundedCornerShape(24.dp),
@@ -77,7 +78,7 @@ fun BottomNavBar(
         NavigationBar(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(72.dp)
+                .height(76.dp)
                 .clip(RoundedCornerShape(24.dp)),
             containerColor = Color.Transparent,
             contentColor = Color.White,
@@ -85,21 +86,20 @@ fun BottomNavBar(
         ) {
             items.forEachIndexed { index, item ->
                 val isSelected = selectedItem == index
-                
-                // Animación de escala para el icono seleccionado
+
                 val iconScale by animateFloatAsState(
                     targetValue = if (isSelected) 1.15f else 1f,
                     animationSpec = tween(durationMillis = 200),
                     label = "icon_scale_$index"
                 )
-                
+
                 NavigationBarItem(
                     icon = {
                         Icon(
                             imageVector = item.icon,
                             contentDescription = item.label,
                             modifier = Modifier
-                                .padding(bottom = 2.dp)
+                                .size(24.dp)
                                 .scale(iconScale)
                         )
                     },
@@ -108,7 +108,9 @@ fun BottomNavBar(
                             text = item.label,
                             fontSize = 11.sp,
                             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                            letterSpacing = 0.3.sp
+                            letterSpacing = 0.3.sp,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1
                         )
                     },
                     selected = isSelected,
@@ -120,10 +122,10 @@ fun BottomNavBar(
                         unselectedIconColor = Color.White.copy(alpha = 0.68f),
                         unselectedTextColor = Color.White.copy(alpha = 0.68f)
                     ),
-                    modifier = Modifier.padding(horizontal = 4.dp)
+                    alwaysShowLabel = true,
+                    modifier = Modifier.padding(top = 24.dp, bottom = 4.dp)
                 )
             }
         }
     }
 }
-
